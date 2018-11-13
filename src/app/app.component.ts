@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
@@ -6,51 +6,72 @@ import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/materia
 import { Record } from 'src/app/record.model';
 import { NewRecord } from './newRecord.model';
 import { map } from 'rxjs/operators';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { auth } from 'firebase/app';
 
 export const MY_FORMATS = {
   parse: {
-    dateInput: 'LL',
+    dateInput: 'LL'
   },
   display: {
     dateInput: 'LL',
     monthYearLabel: 'MMM YYYY',
     dateA11yLabel: 'LL',
-    monthYearA11yLabel: 'MMMM YYYY',
-  },
+    monthYearA11yLabel: 'MMMM YYYY'
+  }
 };
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [
-    { provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
-    { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
-  ],
+  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
+              { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
 })
+export class AppComponent implements OnInit {
+  userId: string;
+  userName: string;
 
-export class AppComponent {
-
-  title = 'FuelApp';
   records: Observable<Record[]>;
   recordsCollectionRef: AngularFirestoreCollection<Record>;
-  model: NewRecord = new NewRecord;
-  displayedColumns: string[] = ['date', 'oedometer', 'price',  'amount', 'star'];
+  model: NewRecord = new NewRecord();
+  displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
 
-  constructor(private db: AngularFirestore) {
-    this.recordsCollectionRef = db.collection<Record>('records', ref => ref.orderBy('date'));
-    this.records = this.recordsCollectionRef.snapshotChanges().pipe(
-      map(changes => { return changes.map(a => {
-        const data = a.payload.doc.data();
-        const id = a.payload.doc.id;
-        return { id, ...data };
-      });
-    }
-  ));
+  constructor(public afAuth: AngularFireAuth, private db: AngularFirestore) {
+
+    this.afAuth.user
+    .pipe(
+      map(vasr => {
+        return { id: vasr.uid, name: vasr.displayName };
+      })
+    )
+    .subscribe(res => {
+      this.userId = res.id;
+      this.userName = res.name;
+
+
+      this.recordsCollectionRef = db.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
+      this.records = this.recordsCollectionRef.snapshotChanges().pipe(
+        map(changes => {
+          return changes.map(a => {
+            const data = a.payload.doc.data();
+            const id = a.payload.doc.id;
+            return { id, ...data };
+          });
+        })
+      );
+    });
+
+
+
+
+  }
+
+  ngOnInit() {
+
   }
 
   createRecord() {
-
     if (typeof this.model.amount != 'number') {
       return;
     }
@@ -67,14 +88,25 @@ export class AppComponent {
       return;
     }
 
-    this.recordsCollectionRef.add({ amount: Number(this.model.amount),
-                  price: Number(this.model.price),
-                  oedometer: Number(this.model.oedometer),
-                  date: this.model.date.toDate(),
-                  recordDateTime: new Date });
+    this.recordsCollectionRef.add({
+      userId: this.userId,
+      amount: Number(this.model.amount),
+      price: Number(this.model.price),
+      oedometer: Number(this.model.oedometer),
+      date: this.model.date.toDate(),
+      recordDateTime: new Date()
+    });
   }
 
   deleteRow(row) {
-    this.recordsCollectionRef.doc(`${row.id}`).delete()
+    this.recordsCollectionRef.doc(`${row.id}`).delete();
+  }
+
+  logIn() {
+    this.afAuth.auth.signInWithPopup(new auth.GoogleAuthProvider());
+  }
+
+  logOut() {
+    this.afAuth.auth.signOut();
   }
 }
