@@ -5,7 +5,7 @@ import { AngularFireModule } from '@angular/fire';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { environment } from '../environments/environment';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatFormFieldModule, MatInputModule, MatButtonModule, MatListModule, MatDatepickerModule, MatToolbarModule } from '@angular/material';
+import { MatFormFieldModule, MatInputModule, MatButtonModule, MatListModule, MatDatepickerModule, MatToolbarModule, MatTableModule, MatCardModule, MatIconModule } from '@angular/material';
 
 import { AppComponent } from './app.component';
 
@@ -24,7 +24,10 @@ import { AppComponent } from './app.component';
     MatButtonModule,
     MatListModule,
     MatDatepickerModule,
-    MatToolbarModule
+    MatToolbarModule,
+    MatTableModule,
+    MatCardModule,
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]
