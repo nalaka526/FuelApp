@@ -6,7 +6,7 @@ import { Record } from 'src/app/record.model';
 import { NewRecord } from './newRecord.model';
 import { map } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { auth, User } from 'firebase/app';
+import { auth } from 'firebase/app';
 import { MatSnackBar } from '@angular/material';
 
 export const MY_FORMATS = {
@@ -25,7 +25,8 @@ export const MY_FORMATS = {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] }, { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
+  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
+              { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
 })
 export class AppComponent implements OnInit {
   userId: string;
