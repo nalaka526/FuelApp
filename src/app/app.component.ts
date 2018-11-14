@@ -6,7 +6,7 @@ import { Record } from 'src/app/record.model';
 import { NewRecord } from './newRecord.model';
 import { map } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { auth } from 'firebase/app';
+import { auth, User } from 'firebase/app';
 import { MatSnackBar } from '@angular/material';
 
 export const MY_FORMATS = {
@@ -31,44 +31,58 @@ export class AppComponent implements OnInit {
   userId: string;
   userName: string;
 
-  // records: Observable<Record[]>;
+  authState: any;
   records: Record[];
   recordsCollectionRef: AngularFirestoreCollection<Record>;
   model: NewRecord = new NewRecord();
   displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
 
-  constructor(public afAuth: AngularFireAuth, private db: AngularFirestore, public snackBar: MatSnackBar) {
-    this.afAuth.user
-      .pipe(
-        map(vasr => {
-          return { id: vasr.uid, name: vasr.displayName };
-        })
-      )
-      .subscribe(res => {
-        this.userId = res.id;
-        this.userName = res.name;
-
-        this.recordsCollectionRef = db.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
-        this.recordsCollectionRef
-          .snapshotChanges()
-          .pipe(
-            map(changes => {
-              return changes.map(a => {
-                const data = a.payload.doc.data();
-                const id = a.payload.doc.id;
-                return { id, ...data };
-              });
-            })
-          )
-          .subscribe(data => {
-            this.records = data.sort(function(a, b) {
-              return b.date.toDate() - a.date.toDate();
-            });
-          });
-      });
+  constructor(public afa: AngularFireAuth, private afs: AngularFirestore, public snackBar: MatSnackBar) {
+    this.afa.authState.subscribe(au => {
+      console.log(au);
+      this.authState = au;
+    });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    if (this.authenticated) {
+      this.loadUser();
+    }
+  }
+
+  loadUser() {
+    this.afa.user.subscribe(user => {
+      if (user != null) {
+        this.userId = user.uid;
+        this.userName = user.displayName;
+        this.bindDtaa();
+      } else {
+        this.userId = null;
+        this.userName = null;
+        this.records = null;
+      }
+    });
+  }
+
+  bindDtaa() {
+    this.recordsCollectionRef = this.afs.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
+    this.recordsCollectionRef
+      .snapshotChanges()
+      .pipe(
+        map(changes => {
+          return changes.map(a => {
+            const data = a.payload.doc.data();
+            const id = a.payload.doc.id;
+            return { id, ...data };
+          });
+        })
+      )
+      .subscribe(data => {
+        this.records = data.sort(function(a, b) {
+          return b.date.toDate() - a.date.toDate();
+        });
+      });
+  }
 
   createRecord() {
     if (typeof this.model.amount != 'number') {
@@ -112,10 +126,17 @@ export class AppComponent implements OnInit {
   }
 
   logIn() {
-    this.afAuth.auth.signInWithPopup(new auth.GoogleAuthProvider());
+    return this.afa.auth
+      .signInWithPopup(new auth.GoogleAuthProvider())
+      .then(() => this.loadUser())
+      .catch(error => console.log(error));
   }
 
   logOut() {
-    this.afAuth.auth.signOut();
+    this.afa.auth.signOut();
+  }
+
+  get authenticated(): boolean {
+    return this.authState != null || this.authState != undefined;
   }
 }

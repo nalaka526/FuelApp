@@ -3,7 +3,7 @@
     <span>Fuel Log</span> <span class="fill-remaining-space"></span> <span class="clickable user-name" (click)="logOut()">{{ userName }}</span>
   </mat-toolbar-row>
 </mat-toolbar>
-<div *ngIf="(afAuth.user | async) as user; else: showLogin">
+<div *ngIf="(afa.user | async) as user; else: showLogin">
   <mat-card>
     <div class="container">
       <mat-form-field> <input matInput placeholder="Amount" [(ngModel)]="model.amount" required type="number" /> </mat-form-field>
