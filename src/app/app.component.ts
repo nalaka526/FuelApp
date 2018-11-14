@@ -25,8 +25,7 @@ export const MY_FORMATS = {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
-              { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
+  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] }, { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
 })
 export class AppComponent implements OnInit {
   userId: string;
@@ -40,8 +39,15 @@ export class AppComponent implements OnInit {
 
   constructor(public afa: AngularFireAuth, private afs: AngularFirestore, public snackBar: MatSnackBar) {
     this.afa.authState.subscribe(au => {
-      console.log(au);
       this.authState = au;
+    });
+
+    this.afa.user.subscribe(user => {
+      if (user != null) {
+        this.userId = user.uid;
+        this.userName = user.displayName;
+        this.bindDtaa();
+      }
     });
   }
 
@@ -52,17 +58,11 @@ export class AppComponent implements OnInit {
   }
 
   loadUser() {
-    this.afa.user.subscribe(user => {
-      if (user != null) {
-        this.userId = user.uid;
-        this.userName = user.displayName;
-        this.bindDtaa();
-      } else {
-        this.userId = null;
-        this.userName = null;
-        this.records = null;
-      }
-    });
+    if (this.authenticated) {
+      this.userId = this.authState.uid;
+      this.userName = this.authState.displayName;
+      this.bindDtaa();
+    }
   }
 
   bindDtaa() {
@@ -135,6 +135,8 @@ export class AppComponent implements OnInit {
 
   logOut() {
     this.afa.auth.signOut();
+    this.userId = null;
+    this.userName = null;
   }
 
   get authenticated(): boolean {
