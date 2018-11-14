@@ -127,10 +127,17 @@ export class AppComponent implements OnInit {
   }
 
   logIn() {
+
+    const gooleAuthProvider = new auth.GoogleAuthProvider();
+
+    gooleAuthProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
     return this.afa.auth
-      .signInWithPopup(new auth.GoogleAuthProvider())
-      .then(() => this.loadUser())
-      .catch(error => console.log(error));
+                    .signInWithPopup(gooleAuthProvider)
+                    .then(() => this.loadUser())
+                    .catch(error => console.log(error));
   }
 
   logOut() {

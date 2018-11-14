@@ -17,7 +17,7 @@
       <div class="button-row"><button mat-raised-button color="primary" (click)="createRecord()">Save</button></div>
     </div>
   </mat-card>
-  <mat-card>
+  <!-- <mat-card> -->
     <div class="container">
       <table mat-table [dataSource]="records" class="mat-elevation-z8">
         <ng-container matColumnDef="date">
@@ -46,7 +46,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
     </div>
-  </mat-card>
+  <!-- </mat-card> -->
 </div>
 <ng-template #showLogin>
   <mat-card> <button mat-stroked-button color="primary" (click)="logIn()">Login with Google</button> </mat-card>
