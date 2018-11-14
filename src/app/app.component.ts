@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { Record } from 'src/app/record.model';
@@ -8,6 +7,7 @@ import { NewRecord } from './newRecord.model';
 import { map } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { auth } from 'firebase/app';
+import { MatSnackBar } from '@angular/material';
 
 export const MY_FORMATS = {
   parse: {
@@ -25,8 +25,7 @@ export const MY_FORMATS = {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] }, 
-              { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
+  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] }, { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
 })
 export class AppComponent implements OnInit {
   userId: string;
@@ -38,7 +37,7 @@ export class AppComponent implements OnInit {
   model: NewRecord = new NewRecord();
   displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
 
-  constructor(public afAuth: AngularFireAuth, private db: AngularFirestore) {
+  constructor(public afAuth: AngularFireAuth, private db: AngularFirestore, public snackBar: MatSnackBar) {
     this.afAuth.user
       .pipe(
         map(vasr => {
@@ -63,7 +62,7 @@ export class AppComponent implements OnInit {
           )
           .subscribe(data => {
             this.records = data.sort(function(a, b) {
-              return  b.date.toDate() - a.date.toDate();
+              return b.date.toDate() - a.date.toDate();
             });
           });
       });
@@ -88,14 +87,24 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.recordsCollectionRef.add({
-      userId: this.userId,
-      amount: Number(this.model.amount),
-      price: Number(this.model.price),
-      oedometer: Number(this.model.oedometer),
-      date: this.model.date.toDate(),
-      recordDateTime: new Date()
-    });
+    this.recordsCollectionRef
+      .add({
+        userId: this.userId,
+        amount: Number(this.model.amount),
+        price: Number(this.model.price),
+        oedometer: Number(this.model.oedometer),
+        date: this.model.date.toDate(),
+        recordDateTime: new Date()
+      })
+      .then(
+        () => {
+          this.snackBar.open('Saved', null, { duration: 4000 });
+        },
+        error => {
+          console.log(error);
+          this.snackBar.open('Error', null, { duration: 4000 });
+        }
+      );
   }
 
   deleteRow(row) {
