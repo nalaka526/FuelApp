@@ -25,51 +25,51 @@ export const MY_FORMATS = {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
+  providers: [{ provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] }, 
               { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS }]
 })
 export class AppComponent implements OnInit {
   userId: string;
   userName: string;
 
-  records: Observable<Record[]>;
+  // records: Observable<Record[]>;
+  records: Record[];
   recordsCollectionRef: AngularFirestoreCollection<Record>;
   model: NewRecord = new NewRecord();
   displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
 
   constructor(public afAuth: AngularFireAuth, private db: AngularFirestore) {
-
     this.afAuth.user
-    .pipe(
-      map(vasr => {
-        return { id: vasr.uid, name: vasr.displayName };
-      })
-    )
-    .subscribe(res => {
-      this.userId = res.id;
-      this.userName = res.name;
-
-
-      this.recordsCollectionRef = db.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
-      this.records = this.recordsCollectionRef.snapshotChanges().pipe(
-        map(changes => {
-          return changes.map(a => {
-            const data = a.payload.doc.data();
-            const id = a.payload.doc.id;
-            return { id, ...data };
-          });
+      .pipe(
+        map(vasr => {
+          return { id: vasr.uid, name: vasr.displayName };
         })
-      );
-    });
+      )
+      .subscribe(res => {
+        this.userId = res.id;
+        this.userName = res.name;
 
-
-
-
+        this.recordsCollectionRef = db.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
+        this.recordsCollectionRef
+          .snapshotChanges()
+          .pipe(
+            map(changes => {
+              return changes.map(a => {
+                const data = a.payload.doc.data();
+                const id = a.payload.doc.id;
+                return { id, ...data };
+              });
+            })
+          )
+          .subscribe(data => {
+            this.records = data.sort(function(a, b) {
+              return  b.date.toDate() - a.date.toDate();
+            });
+          });
+      });
   }
 
-  ngOnInit() {
-
-  }
+  ngOnInit() {}
 
   createRecord() {
     if (typeof this.model.amount != 'number') {

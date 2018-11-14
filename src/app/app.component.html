@@ -1,11 +1,11 @@
 <mat-toolbar color="primary">
   <mat-toolbar-row>
-    <span>App</span> <span class="example-fill-remaining-space"></span> <span class="clickable" (click)="logOut()">{{ userName }}</span>
+    <span>App</span> <span class="fill-remaining-space"></span> <span class="clickable user-name" (click)="logOut()">{{ userName }}</span>
   </mat-toolbar-row>
 </mat-toolbar>
 <div *ngIf="(afAuth.user | async) as user; else: showLogin">
   <mat-card>
-    <div class="example-container">
+    <div class="container">
       <mat-form-field> <input matInput placeholder="Amount" [(ngModel)]="model.amount" required type="number" /> </mat-form-field>
       <mat-form-field> <input matInput placeholder="Price" [(ngModel)]="model.price" required type="number" /> </mat-form-field>
       <mat-form-field> <input matInput placeholder="Odeometer" [(ngModel)]="model.oedometer" required type="number" /> </mat-form-field>
@@ -14,11 +14,11 @@
         <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
         <mat-datepicker #dp></mat-datepicker>
       </mat-form-field>
-      <div class="example-button-row"><button mat-raised-button color="primary" (click)="createRecord()">Save</button></div>
+      <div class="button-row"><button mat-raised-button color="primary" (click)="createRecord()">Save</button></div>
     </div>
   </mat-card>
   <mat-card>
-    <div class="example-container">
+    <div class="container">
       <table mat-table [dataSource]="records" class="mat-elevation-z8">
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef>Date</th>
