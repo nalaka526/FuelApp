@@ -73,7 +73,7 @@ export class AppComponent implements OnInit {
   }
 
   bindDtaa() {
-    this.recordsCollectionRef = this.afs.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date'));
+    this.recordsCollectionRef = this.afs.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date', 'desc'));
     this.recordsCollectionRef
       .snapshotChanges()
       .pipe(
@@ -86,9 +86,7 @@ export class AppComponent implements OnInit {
         })
       )
       .subscribe(data => {
-        this.records = data.sort(function(a, b) {
-          return b.date.toDate() - a.date.toDate();
-        });
+        this.records = data;
       });
   }
 
@@ -117,7 +115,7 @@ export class AppComponent implements OnInit {
         amount: Number(formData.amount),
         price: Number(formData.price),
         oedometer: Number(formData.oedometer),
-        date: formData.date,
+        date: new Date(formData.date),
         recordDateTime: new Date()
       })
       .then(
