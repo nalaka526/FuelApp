@@ -3,11 +3,11 @@ import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/fire
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { Record } from 'src/app/record.model';
-import { NewRecord } from './newRecord.model';
 import { map } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { auth } from 'firebase/app';
 import { MatSnackBar } from '@angular/material';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 export const MY_FORMATS = {
   parse: {
@@ -32,9 +32,9 @@ export class AppComponent implements OnInit {
   userName: string;
 
   authState: any;
+  recordForm: FormGroup;
   records: Record[];
   recordsCollectionRef: AngularFirestoreCollection<Record>;
-  model: NewRecord = new NewRecord();
   displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
 
   constructor(public afa: AngularFireAuth, private afs: AngularFirestore, public snackBar: MatSnackBar) {
@@ -52,6 +52,13 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.recordForm = new FormGroup({
+      amount: new FormControl('', Validators.required),
+      price: new FormControl('', Validators.required),
+      oedometer: new FormControl('', Validators.required),
+      date: new FormControl(new Date(), Validators.required)
+    });
+
     if (this.authenticated) {
       this.loadUser();
     }
@@ -86,33 +93,36 @@ export class AppComponent implements OnInit {
   }
 
   createRecord() {
-    if (typeof this.model.amount != 'number') {
+    const formData = this.recordForm.value;
+
+    if (typeof formData.amount != 'number') {
       return;
     }
 
-    if (typeof this.model.price != 'number') {
+    if (typeof formData.price != 'number') {
       return;
     }
 
-    if (typeof this.model.oedometer != 'number') {
+    if (typeof formData.oedometer != 'number') {
       return;
     }
 
-    if (this.model.date == null) {
+    if (formData.date == null) {
       return;
     }
 
     this.recordsCollectionRef
       .add({
         userId: this.userId,
-        amount: Number(this.model.amount),
-        price: Number(this.model.price),
-        oedometer: Number(this.model.oedometer),
-        date: this.model.date.toDate(),
+        amount: Number(formData.amount),
+        price: Number(formData.price),
+        oedometer: Number(formData.oedometer),
+        date: formData.date,
         recordDateTime: new Date()
       })
       .then(
         () => {
+          this.recordForm.reset({ date: new Date() });
           this.snackBar.open('Saved', null, { duration: 4000 });
         },
         error => {
@@ -127,7 +137,6 @@ export class AppComponent implements OnInit {
   }
 
   logIn() {
-
     const gooleAuthProvider = new auth.GoogleAuthProvider();
 
     gooleAuthProvider.setCustomParameters({
@@ -135,9 +144,9 @@ export class AppComponent implements OnInit {
     });
 
     return this.afa.auth
-                    .signInWithPopup(gooleAuthProvider)
-                    .then(() => this.loadUser())
-                    .catch(error => console.log(error));
+      .signInWithPopup(gooleAuthProvider)
+      .then(() => this.loadUser())
+      .catch(error => console.log(error));
   }
 
   logOut() {
