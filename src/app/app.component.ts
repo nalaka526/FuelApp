@@ -35,7 +35,10 @@ export class AppComponent implements OnInit {
   recordForm: FormGroup;
   records: Record[];
   recordsCollectionRef: AngularFirestoreCollection<Record>;
-  displayedColumns: string[] = ['date', 'oedometer', 'price', 'amount', 'star'];
+  displayedColumns: string[];
+
+  public innerWidth: any;
+
 
   constructor(public afa: AngularFireAuth, private afs: AngularFirestore, public snackBar: MatSnackBar) {
     this.afa.authState.subscribe(au => {
@@ -46,12 +49,14 @@ export class AppComponent implements OnInit {
       if (user != null) {
         this.userId = user.uid;
         this.userName = user.displayName;
-        this.bindDtaa();
+        this.bindData();
       }
     });
   }
 
   ngOnInit() {
+    this.setColumns(window.innerWidth);
+
     this.recordForm = new FormGroup({
       amount: new FormControl('', Validators.required),
       price: new FormControl('', Validators.required),
@@ -64,28 +69,42 @@ export class AppComponent implements OnInit {
     }
   }
 
+  setColumns(width: number) {
+      console.log(width);
+      if (width <= 400) {
+        this.displayedColumns = ['date', 'oedometer', 'price', 'amount', 'delete'];
+      } else {
+        this.displayedColumns = ['date', 'oedometer', 'diff', 'price', 'litres', 'amount', 'delete'];
+      }
+  }
+
   loadUser() {
     if (this.authenticated) {
       this.userId = this.authState.uid;
       this.userName = this.authState.displayName;
-      this.bindDtaa();
+      this.bindData();
     }
   }
 
-  bindDtaa() {
+  bindData() {
     this.recordsCollectionRef = this.afs.collection<Record>('records', ref => ref.where('userId', '==', this.userId).orderBy('date', 'desc'));
     this.recordsCollectionRef
       .snapshotChanges()
       .pipe(
+
         map(changes => {
-          return changes.map(a => {
-            const data = a.payload.doc.data();
-            const id = a.payload.doc.id;
-            return { id, ...data };
+          return changes.map((cur, index, arr) => {
+            const data = cur.payload.doc.data();
+            const id = cur.payload.doc.id;
+            const diff = index === 0 ? 0 : arr[index - 1].payload.doc.data().oedometer - arr[index].payload.doc.data().oedometer;
+            return { id, diff: diff, ...data   };
           });
         })
       )
       .subscribe(data => {
+        if (data != null && data.length > 0) {
+          this.recordForm.patchValue({ price: data[0].price });
+        }
         this.records = data;
       });
   }
@@ -151,6 +170,9 @@ export class AppComponent implements OnInit {
     this.afa.auth.signOut();
     this.userId = null;
     this.userName = null;
+    this.records = null;
+    this.recordsCollectionRef = null;
+    this.recordForm.reset({ date: new Date() });
   }
 
   get authenticated(): boolean {

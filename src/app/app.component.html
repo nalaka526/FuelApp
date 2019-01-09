@@ -31,15 +31,23 @@
         <th mat-header-cell *matHeaderCellDef class="right">Oedometer</th>
         <td mat-cell *matCellDef="let element" class="right">{{ element.oedometer | number: '6.0-0' }}</td>
       </ng-container>
+      <ng-container matColumnDef="diff">
+        <th mat-header-cell *matHeaderCellDef class="right">Oed. Diff</th>
+        <td mat-cell *matCellDef="let element" class="right">{{ element.diff | number: '1.0-0' }}</td>
+      </ng-container>
       <ng-container matColumnDef="price">
         <th mat-header-cell *matHeaderCellDef class="right">Price/L</th>
         <td mat-cell *matCellDef="let element" class="right">{{ element.price | number: '1.0-0' }}</td>
       </ng-container>
+      <ng-container matColumnDef="litres">
+        <th mat-header-cell *matHeaderCellDef class="right">L</th>
+        <td mat-cell *matCellDef="let element" class="right">{{ element.amount/element.price | number: '1.2-2' }}</td>
+      </ng-container>
       <ng-container matColumnDef="amount">
         <th mat-header-cell *matHeaderCellDef class="right">Amount</th>
-        <td mat-cell *matCellDef="let element" class="right">{{ element.amount | number: '1.2-2' }}</td>
+        <td mat-cell *matCellDef="let element" class="right">{{ element.amount | number: '1.2-2' }} </td>
       </ng-container>
-      <ng-container matColumnDef="star" stickyEnd>
+      <ng-container matColumnDef="delete" stickyEnd>
         <th mat-header-cell *matHeaderCellDef class="right"></th>
         <td mat-cell *matCellDef="let element" class="right">
           <a class="clickable"> <mat-icon (click)="deleteRow(element)">delete</mat-icon> </a>
